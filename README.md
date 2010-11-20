@@ -30,16 +30,15 @@ That's just my prefered syntax for these things though, there's no limits, any j
     if(me.age > 18) return true;          // it's all native values, just use like normal!
 
 
-## Literals & Values ##
+## Nodes & Values ##
 
-All values of type string, number, boolean and date are also RDF Literals, and are fully aligned (and compatible) with the Interfaces
+All values of type string, number, boolean and date are also RDF Nodes, and are fully aligned (and compatible) with the Interfaces
 from the RDFa API.
 
-### Standard Literal Methods ####
-All of the js basic literal types (string, number, boolean and date) are augmented with the following methods:
+### Standard Methods ####
+All of the basic js types (string, number, boolean and date) are augmented with the following methods:
 
-*   **.nodeType()**
-    returns one of PlainLiteral, TypedLiteral, BlankNode or IRI
+*   **.nodeType()** - returns one of PlainLiteral, TypedLiteral, BlankNode or IRI
     
         true.nodeType();                  // TypedLiteral
         (12 * 1.4).nodeType();            // TypedLiteral
@@ -49,13 +48,15 @@ All of the js basic literal types (string, number, boolean and date) are augment
         "foaf:name".nodeType();           // IRI
         "http://webr3.org/".nodeType();   // IRI
     
-*   **.equals(other)**
+*   **.equals(other)** - returns boolean
+
     RDF type safe equality test.
     
         "hello" == "hello".l('en')        // true
         "hello".equals( "hello".l('en') ) // false
 
-*   **.toNT()**
+*   **.toNT()** - returns string
+
     Does what it says on the tin, returns the N-Triples formatted value.
     
         true.toNT();                      // "true"^^<http://www.w3.org/2001/XMLSchema#boolean>
@@ -68,9 +69,11 @@ All of the js basic literal types (string, number, boolean and date) are augment
         "http://webr3.org/".toNT();       // <http://webr3.org/>  
 
 *   **.toCanonical()**
+
     Alias of .toNT(), RDFa API compatibility method.
 
-*   **.n3()** 
+*   **.n3()** returns string
+
     Returns the value formatted for N3/Turtle.
 
         true.n3();                        // true
@@ -83,10 +86,40 @@ All of the js basic literal types (string, number, boolean and date) are augment
         "http://webr3.org/".n3();         // <http://webr3.org/> 
 
 
-If the nodeType is TypedLiteral, then the following property is also exposed:
+### String Methods ####
+A string can represent any of the RDF Node types, PlainLiteral (+language), TypedLiteral, BlankNode or IRI.
+In js3 string also exposes the following methods:
 
-- **.type** - returns a String (which has a nodeType of IRI) 
+*   **.l()** - returns this
 
+    Set the language of a PlainLiteral - exposes the **.language** attribute after calling.
 
+        var s = "Hello World".l('en');                        
+        s.language                        // 'en'
+        s.nodeType();                     // PlainLiteral
+        s.toNT();                         // "Hello World"@en
+ 
+*   **.tl()** - returns this
+
+    Set the type of a TypedLiteral - exposes the **.type** attribute after calling.
+
+        var s = "0FB7".tl('xsd:hexBinary');
+        s.type                            // http://www.w3.org/2001/XMLSchema#hexBinary
+        s.nodeType();                     // TypedLiteral
+        s.toNT();                         // "0FB7"^^<http://www.w3.org/2001/XMLSchema#hexBinary>
+        
+    Note: this method also caters for the situations when you want a PlainLiteral to be an xsd:string, or an IRI to be a PlainLiteral
+    
+        var u = "http://webr3.org/";      // <http://webr3.org/>
+        u.tl("rdf:PlainLiteral);          // "http://webr3.org/"
+        
+        var h = "hello";                  // "hello"
+        "hello".tl('xsd:string');         // "hello"^^<http://www.w3.org/2001/XMLSchema#string>
+ 
+*   **.resolve()** - returns string IRI
+
+    Resolve a CURIE to a full IRI - note this is done automatically by .n3 and .toNT methods.
+
+        "foaf:name".resolve()             // returns string "http://xmlns.com/foaf/0.1/name" with nodeType IRI
 
 
