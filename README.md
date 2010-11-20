@@ -7,6 +7,11 @@ All values are both the standard javascript values you expect (no extension or s
 
 ## Example ##
 
+This library doesn't inspect objects and then generate RDF, rather each value /is/ RDF, and javascript:
+
+    true.toNT();         // "true"^^<http://www.w3.org/2001/XMLSchema#boolean>
+    (12 * 1.4).toNT();   // "12.3"^^<http://www.w3.org/2001/XMLSchema#decimal>
+    
 Here's a complicated yet simple example to illustrate, this is just a standard Object in js:
 
     var me = {
@@ -45,7 +50,7 @@ It's just that simple, your javascript is your RDF, it's just plain old javascri
 
 This library requires ECMAScript-262 V5, specifically it makes heavy usage of Object.defineProperties.
 
-You can check the compatibility chart http://kangax.github.com/es5-compat-table/ to see if your platform / browser supports it.
+You can check the [compatibility chart](http://kangax.github.com/es5-compat-table/) to see if your platform / browser supports it.
 The short version is that chrome 5+, ff4, webkit (safari) and ie9 all support this script, and on the server side node.js, rhino and besen are all fine.
 
 Objects and values are not modified in the usual manner and they are not converted in to different types, rather this library automagically redefines
@@ -113,7 +118,7 @@ In js3 string also exposes the following methods:
 
 *   **.l()** - returns this
 
-    Set the language of a PlainLiteral - exposes the **.language** attribute after calling.
+    Set the language of a PlainLiteral - exposes the **.language** attribute after calling. (.language is non-enumerable, read-only)
 
         var s = "Hello World".l('en');                        
         s.language                        // 'en'
@@ -122,7 +127,7 @@ In js3 string also exposes the following methods:
  
 *   **.tl()** - returns this
 
-    Set the type of a TypedLiteral - exposes the **.type** attribute after calling.
+    Set the type of a TypedLiteral - exposes the **.type** attribute after calling. (.type is non-enumerable, read-only)
 
         var s = "0FB7".tl('xsd:hexBinary');
         s.type                            // http://www.w3.org/2001/XMLSchema#hexBinary
@@ -143,4 +148,44 @@ In js3 string also exposes the following methods:
 
         "foaf:name".resolve()             // returns string "http://xmlns.com/foaf/0.1/name" with nodeType IRI
 
+Remember, all javascript values and types remain unchanged, so it's entirely backwards compatible with all existing data, and will not modify any js values,
+"Hello World".l('en') is still a String, properties like .language and .type are non-enumerable, so they won't show up in for loops or when you JSON.stringify
+the values. You cannot implement this library in non v5 ecmascript by simply adding a .language property to the String object, that simply won't work.
 
+### Numbers ####
+
+js3 is fully aware of number types, it knows when a number is an integer, a double or a decimal.
+
+    12 .toNT()                            // "12"^^<http://www.w3.org/2001/XMLSchema#integer>
+    12.1 .toNT()                          // "12.1"^^<http://www.w3.org/2001/XMLSchema#decimal>
+    1267.43233E32 .toNT()                 // "1.26743233e+35"^^<http://www.w3.org/2001/XMLSchema#double>
+
+**Gotcha:** do note that you need to add a space between the number and the .method, or wrap the number in braces *(12.1).toNT()*,
+since js expects any integer followed immediately by a period to be a decimal, like 12.145 - this only applies to hard coded in the source-code numbers, and not
+those in variables or returned from functions, so generally isn't noticable, in the same way that you don't normally write 12.toString()!
+
+
+## Arrays and Lists ##
+
+JS3 uses arrays for both lists of objects in property-object chains { name: ['nathan','nath'] } and as rdf Lists.
+
+You can determine whether an array is a list or not by inspecting the boolean property **.list** on any array. To specify that an array is a list you simply call .toList() on it.
+
+### Array Methods and Properties
+
+*   **.list** - boolean
+
+    Boolean flag indicating whether an array is an RDF list. 
+    
+*   **.toList()** - returns this
+
+    Specifies that an array is to be used as an RDF list, sets the .list property to true.
+
+*   **.n3()** returns string
+
+    Returns the value formatted for N3/Turtle.
+
+        [1,2,3,4].n3()                        // 1, 2, 3, 4
+        [1,2,3,4].toList().n3()               // ( 1 2 3 4 )
+        
+Note that there is no .toNT or .nodeType methods, or related, arrays and lists are not RDF Nodes.
