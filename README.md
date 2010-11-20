@@ -7,7 +7,7 @@ All values are both the standard javascript values you expect (no extension or s
 
 ## Example ##
 
-This library doesn't inspect objects and then generate RDF, rather each value /is/ RDF, and javascript:
+This library doesn't inspect objects and then generate RDF, rather each value *is* RDF, and javascript:
 
     true.toNT();         // "true"^^<http://www.w3.org/2001/XMLSchema#boolean>
     (12 * 1.4).toNT();   // "12.3"^^<http://www.w3.org/2001/XMLSchema#decimal>
@@ -114,7 +114,7 @@ All of the basic js types (string, number, boolean and date) are augmented with 
 
 ### String Methods ####
 A string can represent any of the RDF Node types, PlainLiteral (+language), TypedLiteral, BlankNode or IRI.
-In js3 string also exposes the following methods:
+In js3 string exposes the following methods (in addition to the standard methods outlined above):
 
 *   **.l()** - returns this
 
@@ -188,4 +188,10 @@ You can determine whether an array is a list or not by inspecting the boolean pr
         [1,2,3,4].n3()                        // 1, 2, 3, 4
         [1,2,3,4].toList().n3()               // ( 1 2 3 4 )
         
-Note that there is no .toNT or .nodeType methods, or related, arrays and lists are not RDF Nodes.
+Note that there are no .toNT or .nodeType methods, or related, arrays and lists are not RDF Nodes.
+
+## Objects and Descriptions ##
+
+In js3 each Object is by default just an Object with a single addition method exposed **.ref()**. When you call this method the object is RDF enabled,
+whereby it is set to denote the description of something - identified by a blanknode or an IRI - the keys (properties) are mapped to RDF Properties,
+a **.id** attribute is exposed on the object, and four methods are also exposed: **.n3()**, **.toNT()**, **.using()** and **.graphify()**.
