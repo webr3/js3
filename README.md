@@ -25,7 +25,7 @@ Here's a complicated yet simple example to illustrate, this is just a standard O
     
 That's just my prefered syntax for these things though, there's no limits, any javascript is also RDF:
 
-    me.name = "Nathan".l('en');           // you can use the . notation to get or set (nothings different, honest, it's still just a String)
-    me.gender = "male";                   // see, yes that'll resolve to foaf:gender to http://xmlns.com/foaf/0.1/gender 
+    me.name = "Nathan".l('en');           // you can use the . notation to get or set (nothings different, honest)
+    me.gender = "male";                   // .gender will resolve to foaf:gender to http://xmlns.com/foaf/0.1/gender 
     if(me.age > 18) return true;          // it's all native values, just use like normal!
 
