@@ -15,20 +15,41 @@ Here's a complicated yet simple example to illustrate, this is just a standard O
       age: new Date().getFullYear() - 1981,                     // a Number, and a Typed Literal with the type xsd:integer
       homepage: 'http://webr3.org',                             // a String, and an IRI, 
       holdsAccount: {                                           // an Object, with a BlankNode reference for the .id
-        label: 'Nathan's twitter account'.l('en'),              // a String, and a Literal with a .language
+        label: "Nathan's twitter account".l('en'),              // a String, and a Literal with a .language
         accountName: 'webr3',                                   // noticed that you don't need the prefixes yet?
         accountProfilePage: 'http://twitter.com/webr3'          
       },
       knows: bob,                                               // works with variables too of course
       nick: ['webr3','nath']                                    // an Array, also a list of values, like in turtle and n3
     }.ref(":me");                                               // still an Object, but also has a .id now, it's subject is set.
-    
-That's just my prefered syntax for these things though, there's no limits, any javascript is also RDF:
 
-    me.name = "Nathan".l('en');           // you can use the . notation to get or set (nothings different, honest)
+If we now call *me.n3()* we'll get the following output:
+
+    <http://webr3.org/nathan#me> rdf:type foaf:Person;
+      foaf:name "Nathan";
+      foaf:age 29;
+      foaf:homepage <http://webr3.org>;
+      foaf:holdsAccount [
+        rdfs:label "Nathan's twitter account"@en;
+        foaf:accountName "webr3";
+        accountProfilePage <http://twitter.com/webr3> ];
+      foaf:knows <http://example.com/bob#me>;
+      foaf:nick "webr3", "nath" .
+
+It's just that simple, your javascript is your RDF, it's just plain old javascript:
+
     me.gender = "male";                   // .gender will resolve to foaf:gender to http://xmlns.com/foaf/0.1/gender 
     if(me.age > 18) return true;          // it's all native values, just use like normal!
 
+### Implementation Notice ###
+
+This library requires ECMAScript-262 V5, specifically it makes heavy usage of Object.defineProperties.
+
+You can check the compatibility chart http://kangax.github.com/es5-compat-table/ to see if your platform / browser supports it.
+The short version is that chrome 5+, ff4, webkit (safari) and ie9 all support this script, and on the server side node.js, rhino and besen are all fine.
+
+Objects and values are not modified in the usual manner and they are not converted in to different types, rather this library automagically redefines
+the property descriptors on objects to allow each value to be both a native javascript value, and an RDF compatible value.
 
 ## Nodes & Values ##
 
