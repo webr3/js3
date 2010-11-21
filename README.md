@@ -242,4 +242,44 @@ As for migrating IRIs or renaming subjects, that's as simple as calling .ref(':n
 
 ### Nesting ###
  
+When Objects are nested, they are by default considered to be blanknodes, *however!*, you can of course call .ref() on them in place, and thus
+describe things in context, and name them there too.
+
+So in this case the object in holdsAccount will be a blanknode:
+
+    var me = {
+      name: 'Nathan',
+      holdsAccount: {
+        label: "Nathan's twitter account".l('en'),
+        accountName: 'webr3',
+        accountProfilePage: 'http://twitter.com/webr3'          
+      },
+    }.ref(":me");
+
+But in this case it'll have it's own IRI:
+    
+    var me = {
+      name: 'Nathan',
+      holdsAccount: {
+        label: "Nathan's twitter account".l('en'),
+        accountName: 'webr3',
+        accountProfilePage: 'http://twitter.com/webr3'          
+      }.ref(':twitter'),                                        // here's where we named it
+    }.ref(":me");
+
+... of course we can code this however we want to get the same results, for example:
+
+    var me = { name: 'Nathan' }.ref(":me");
+    var account = { accountName: 'webr3' };
+    account.label = "Nathan's twitter account";
+    account.label.l('en');
+    me.holdsAccount = account;
+    me.holdsAccount.foaf$accountProfilePage = "twitter:webr3".resolve();
+    me.holdsAccount.ref(':twitter');
+
+... or create structures just as complex as we like:
+
+   {
+     deep: [ "item1", [1, 2.745, [me,bob,"x:mary"].toList(), new Date(), bob].toList(), "something".l('en'), [bob.id, me.id].toList() ]
+   }
 
