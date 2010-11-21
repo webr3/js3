@@ -307,7 +307,7 @@ It's all very flexible - as you can see as we just map reduced an RDF List and u
 
 ### Object Methods and Properties - after .ref()'ing ###
 
-*   **.id** - string
+*   **.id** - string (read-only, non-enumerable)
 
     BlankNode or IRI in a string, the subject / .id of this object. 
     
