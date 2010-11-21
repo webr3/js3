@@ -340,7 +340,7 @@ It's all very flexible - as you can see as we just map reduced an RDF List and u
     
         var iri = js3.curiemap.foaf;
         
-*   to set the default prefix "**:**" :
+*   **.setDefault(iri)** - to set the default prefix "**:**" :
     
         js3.curiemap.setDefault('http://webr3.org/nathan#');
 
@@ -350,12 +350,17 @@ It's all very flexible - as you can see as we just map reduced an RDF List and u
 *   to add the properties for an ontology:
     
         js3.propertymap.foaf = ['name','mbox','page', ...];
-        
+
+note: the value must always be an array.
+
 *   to get the properties for an ontology:
     
         var properties = js3.propertymap.foaf;
         
-note: the value must always be an array.
+*   **.ambiguities()** - returns an array of ambiguous properties:
+    
+        var gotchas = js3.propertymap.ambiguities();
+        
 
 ## js3.graphify() ##
 
