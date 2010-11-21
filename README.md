@@ -192,6 +192,35 @@ Note that there are no .toNT or .nodeType methods, or related, arrays and lists 
 
 ## Objects and Descriptions ##
 
-In js3 each Object is by default just an Object with a single addition method exposed **.ref()**. When you call this method the object is RDF enabled,
+In js3 each Object is by default just an Object with a single additional method exposed **.ref()**. When you call this method the object is RDF enabled,
 whereby it is set to denote the description of something - identified by a blanknode or an IRI - the keys (properties) are mapped to RDF Properties,
 a **.id** attribute is exposed on the object, and four methods are also exposed: **.n3()**, **.toNT()**, **.using()** and **.graphify()**.
+
+### The Basics ###
+It's all really simple tbh, the properties on each object can either be:
+
+- obj['http://xmlns.com/foaf/0.1/name'] - a full IRI
+- obj['foaf:name'] - a normal CURIE
+- obj.foaf$name - a more javascript friendly CURIE where the : is swapped for a $
+- obj.name - a single property which maps up to a CURIE, which maps to an IRI
+
+Each value can be a single value (of any type covered), or an array of values (which might be a list), or an object (which can be named with an IRI or a blanknode identifier).
+
+And thus, just like normal javascript or JSON you can make an object structure as simple or as complicated as you like.
+
+Objects can also have methods on them, and these are stripped from any output, so any existing object whether dumb or a full class with properties can be used.
+
+They're just javascript objects with a .id set on them, and where the properties are mapped to RDF properties. So, each object can be seen to describe one thing, one subject, the .id is the subject.
+To set the .id all you do is call **.ref()** on the object, if you pass in a CURIE or an IRI as a param then that is set as the subject/.id, if you call .ref() with no argument then it is given a blanknode identifier as the .id.
+
+The methods exposed after .ref'ing are also simple, .n3 dumps an n3 string of the object, .toNT dumps it out as ntriples, and .graphify gives you back an RDFGraph from the RDFa API, making it completely compatible and exposing all the functionality of my [rdfa-api](http://github.org/webr3/rdfa-api) library (and other compatible implementations of the RDFa API).
+
+**.using()** is a bit more subtle, you can throw in the names of ontologies which properties your using come from, in order to provide an unambiguous mapping, for instance:
+
+    var article = {
+      description: "A dc11:, not dc:, description",
+      label: "An rdfs:label"
+    }.ref(':me').using('dc11','rdfs');
+
+If you don't pass in any names, then they are mapped up on a first-hit-first-used basis. This is covered more in the section about *propertymap* and *curiemap*.
+
