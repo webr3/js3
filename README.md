@@ -279,7 +279,27 @@ But in this case it'll have it's own IRI:
 
 ... or create structures just as complex as we like:
 
-   {
-     deep: [ "item1", [1, 2.745, [me,bob,"x:mary"].toList(), new Date(), bob].toList(), "something".l('en'), [bob.id, me.id].toList() ]
-   }
+    { deep: [
+      "item1",
+      [1, 2.745, [me,bob,"x:mary"].toList(), new Date(), bob].toList(),
+      "something".substr(3,4).l('en'),
+      [bob.id, me.id].toList(), { foo: "bar" }
+    ]};
 
+... and interact with our data however we want:
+
+    var somedata = {
+      values: [1,10,25,50].toList(),
+      created: new Date()
+    }.ref(':results'); 
+    with(Math) {
+      somedata.result = somedata.values.map(sqrt).reduce(function(p,c) { return max(p,c) });
+    }
+
+... and then call .n3():
+
+    :results
+      dc:created "2010-11-20T21:06:42Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+      seq:values ( 1 10 25 50 );
+      seq:result 7.0710678118654755 .
+      
