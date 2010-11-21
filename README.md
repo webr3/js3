@@ -240,7 +240,7 @@ You can also have X many Objects with the same .id, then when you .graphify them
 
 As for migrating IRIs or renaming subjects, that's as simple as calling .ref(':newid') on any object, no complex rdf replace routines needed.
 
-### Nesting ###
+### Data Structures ###
  
 When Objects are nested, they are by default considered to be blanknodes, *however!*, you can of course call .ref() on them in place, and thus
 describe things in context, and name them there too.
