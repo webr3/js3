@@ -22,7 +22,7 @@ Here's a complicated yet simple example to illustrate, this is just a standard O
       holdsAccount: {                                           // an Object, with a BlankNode reference for the .id
         label: "Nathan's twitter account".l('en'),              // a String, and a Literal with a .language
         accountName: 'webr3',                                   // noticed that you don't need the prefixes yet?
-        accountProfilePage: 'http://twitter.com/webr3'          
+        homepage: 'http://twitter.com/webr3'          
       },
       knows: bob,                                               // works with variables too of course
       nick: ['webr3','nath']                                    // an Array, also a list of values, like in turtle and n3
@@ -37,7 +37,7 @@ If we now call *me.n3()* we'll get the following output:
       foaf:holdsAccount [
         rdfs:label "Nathan's twitter account"@en;
         foaf:accountName "webr3";
-        accountProfilePage <http://twitter.com/webr3> ];
+        foaf:homepage <http://twitter.com/webr3> ];
       foaf:knows <http://example.com/bob#me>;
       foaf:nick "webr3", "nath" .
 
@@ -252,7 +252,7 @@ So in this case the object in holdsAccount will be a blanknode:
       holdsAccount: {
         label: "Nathan's twitter account".l('en'),
         accountName: 'webr3',
-        accountProfilePage: 'http://twitter.com/webr3'          
+        homepage: 'http://twitter.com/webr3'          
       },
     }.ref(":me");
 
@@ -263,7 +263,7 @@ But in this case it'll have it's own IRI:
       holdsAccount: {
         label: "Nathan's twitter account".l('en'),
         accountName: 'webr3',
-        accountProfilePage: 'http://twitter.com/webr3'          
+        homepage: 'http://twitter.com/webr3'          
       }.ref(':twitter'),                                        // here's where we named it
     }.ref(":me");
 
@@ -274,7 +274,7 @@ But in this case it'll have it's own IRI:
     account.label = "Nathan's twitter account";
     account.label.l('en');
     me.holdsAccount = account;
-    me.holdsAccount.foaf$accountProfilePage = "twitter:webr3".resolve();
+    me.holdsAccount.foaf$homepage = "twitter:webr3".resolve();
     me.holdsAccount.ref(':twitter');
 
 ... or create structures just as complex as we like:
