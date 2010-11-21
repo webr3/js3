@@ -321,11 +321,72 @@ It's all very flexible - as you can see as we just map reduced an RDF List and u
 
 *   **.graphify()** - returns RDFGraph
 
-    Reurns the structure as an RDFGraph of RDFTriples as per the RDFa API core interfaces - compat++.
+    Returns the structure as an RDFGraph of RDFTriples as per the RDFa API core interfaces - compat++.
 
 *   **.using(arg1, arg2 ... argN)** - returns this
 
     Pass in string prefixes for ontologies to consider when mapping simple properties.
 
 
-## curiemap and propertymap ##
+## js3.curiemap and js3.propertymap ##
+
+**js3.curiemap** is a simple object which maps prefixes to IRIs.
+
+*   to add a CURIE mapping:
+    
+        js3.curiemap.foaf = "http://xmlns.com/foaf/0.1/";
+        
+*   to get an IRI for a prefix:
+    
+        var iri = js3.curiemap.foaf;
+        
+*   to set the default prefix "**:**" :
+    
+        js3.curiemap.setDefault('http://webr3.org/nathan#');
+
+
+**js3.propertymap** is a simple object which makes the lib aware of properties in ontologies.
+
+*   to add the properties for an ontology:
+    
+        js3.propertymap.foaf = ['name','mbox','page', ...];
+        
+*   to get the properties for an ontology:
+    
+        var properties = js3.propertymap.foaf;
+        
+note: the value must always be an array.
+
+## js3.graphify() ##
+
+A simple method which can accept any number of objects, or an array of objects, and will return back an RDFGraph.
+
+
+# Coming Soon #
+
+*   **IRI.deref( callback )**
+
+    A web aware function that will get the description of a subject from the web (negotiating formats) and return back a js3 object to work with:
+    
+        "http://webr3.org/nathan#me".deref( function(me) {
+          print( me.name ); // etc
+        });
+        
+*   **Obj.save()**
+
+    A web aware function that will PUT an updated description:
+    
+        "http://webr3.org/nathan#me".deref( function(me) {
+          me.friends.push( "somebody:new );
+          me.save();
+        });
+        
+*   **Full rdfa-api integration**
+
+    From the other side, so you can do graph.describe(subject) and get back an object, and suchlike.
+    
+Probably much more..
+
+# Feedback #
+
+All feedback, bugs etc via issues here, or, well you can get all my details from my FOAF profile using this lib if you like ;)
