@@ -171,7 +171,7 @@ JS3 uses arrays for both lists of objects in property-object chains { name: ['na
 
 You can determine whether an array is a list or not by inspecting the boolean property **.list** on any array. To specify that an array is a list you simply call .toList() on it.
 
-### Array Methods and Properties
+### Array Methods and Properties ###
 
 *   **.list** - boolean
 
@@ -303,3 +303,29 @@ But in this case it'll have it's own IRI:
       seq:values ( 1 10 25 50 );
       seq:result 7.0710678118654755 .
       
+It's all very flexible - as you can see as we just map reduced an RDF List and updated a graph in one line :)
+
+### Object Methods and Properties - after .ref()'ing ###
+
+*   **.id** - string
+
+    BlankNode or IRI in a string, the subject / .id of this object. 
+    
+*   **.n3()** returns string
+
+    Returns the object as N3/Turtle.
+
+*   **.toNT()** returns string
+
+    Returns the object as NTriples.
+
+*   **.graphify()** - returns RDFGraph
+
+    Reurns the structure as an RDFGraph of RDFTriples as per the RDFa API core interfaces - compat++.
+
+*   **.using(arg1, arg2 ... argN)** - returns this
+
+    Pass in string prefixes for ontologies to consider when mapping simple properties.
+
+
+## curiemap and propertymap ##
