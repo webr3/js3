@@ -327,7 +327,7 @@ It's all very flexible - as you can see as we just map reduced an RDF List and u
 
     Pass in string prefixes for ontologies to consider when mapping simple properties.
     
-    Do see the [wiki page on .using() js3.propertymap](https://github.com/webr3/js3/wiki/.using()-js3.propertymap) for more details.
+    Do see the [wiki page on .using() js3.propertymap](https://github.com/webr3/js3/wiki/using-and-propertymap) for more details.
 
 
 ## js3.curiemap and js3.propertymap ##
@@ -363,7 +363,7 @@ note: the value must always be an array.
     
         var gotchas = js3.propertymap.ambiguities();
 
-Do see the [wiki page on .using() js3.propertymap](https://github.com/webr3/js3/wiki/.using()-js3.propertymap) for more details.
+Do see the [wiki page on .using() js3.propertymap](https://github.com/webr3/js3/wiki/using-and-propertymap) for more details.
 
 ## js3.graphify() ##
 
