@@ -329,7 +329,7 @@ js3 = (function( curiemap, propertymap ) {
             if(typeof o[p] == 'function') return;
             if(o[p].id && o[p].id.nodeType() == 'IRI') return outs.push( prop(p,map) + ' ' + o[p].id.n3() );
             if(!o[p].nodeType && !o[p].id) o[p].ref();
-            outs.push( prop(map && map[p] ? map[p] : p) + ' ' + o[p].n3(map) );
+            outs.push( prop(p, map) + ' ' + o[p].n3(map) );
           });
           outs = outs.join(";\n  ");
           return id ? this.id.n3() + ' ' + outs + ' .' : '[ ' + outs + ' ]';
@@ -370,11 +370,7 @@ js3 = (function( curiemap, propertymap ) {
           return graph;
         }),
         using: _( function() {
-          var a = arguments, aliasmap = {};
-          Object.keys(this).forEach(function(p) {
-            if( p.indexOf(":") == -1 && p.indexOf("$") == -1 ) aliasmap[p] = propertymap.resolve(p,a);
-          });
-          if(Object.keys(aliasmap).length > 0) Object.defineProperty(this,'aliasmap',_(aliasmap));
+          Object.defineProperty(this,'aliasmap',_(Array.prototype.slice.call(arguments)));
           return this;
         })
       });

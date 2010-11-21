@@ -360,7 +360,7 @@ note: the value must always be an array.
 *   **.ambiguities()** - returns an array of ambiguous properties:
     
         var gotchas = js3.propertymap.ambiguities();
-        
+
 
 ## js3.graphify() ##
 
