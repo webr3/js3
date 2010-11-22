@@ -1702,7 +1702,6 @@ rdfapi = (function(api) {
       if(property && n.equals(api.serializers.Turtle.RDF_TYPE)) { return "a" }
       if(n.equals(api.serializers.Turtle.RDF_NIL)) { return "()" }
       var _g = 0, _g1 = this.prefixMap.keys();
-      console.log(n + ' ' + n.value);
       while(_g < _g1.length) {
         var i = _g1[_g];
         ++_g;
