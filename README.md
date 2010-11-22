@@ -346,6 +346,16 @@ It's all very flexible - as you can see as we just map reduced an RDF List and u
     
         js3.curiemap.setDefault('http://webr3.org/nathan#');
 
+*   **.getPrefix(iri)** - get the registered prefix for an IRI, returns null if no prefix is found:
+    
+        js3.curiemap.getPrefix('http://xmlns.com/foaf/0.1/'); // 'foaf'
+        
+*   **.shrink(iri)** - turn an IRI in to a CURIE :
+
+    This method returns either a CURIE or the original IRI if no prefix is found.
+    
+        js3.curiemap.shrink('http://xmlns.com/foaf/0.1/name'); // 'foaf:name'
+        
 
 **js3.propertymap** is a simple object which makes the lib aware of properties in ontologies.
 

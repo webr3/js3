@@ -2,6 +2,11 @@
  * CURIE Map
  */
 var curiemap = (function(map) {
+  function oflip(o) {
+    var out = {};
+    Object.keys(o).forEach(function(k) { out[o[k]] = k });
+    return out;
+  };
   return Object.defineProperties(map, {
     resolve: {
       writable: false, configurable : false, enumerable: false,
@@ -16,7 +21,20 @@ var curiemap = (function(map) {
     setDefault: {
       writable: false, configurable : false, enumerable: false,
       value: function(o) { this[''] = o; return this; }
-    }
+    },
+    getPrefix: {
+      writable: false, configurable : false, enumerable: false,
+      value: function(o) { return oflip(this)[o]; }
+    },
+    shrink: {
+      writable: false, configurable : false, enumerable: false,
+      value: function(iri) {
+        for(pref in this)
+          if(iri.substr(0,this[pref].length) == this[pref])
+            return pref + ':' + iri.slice(this[pref].length);
+        return iri;
+      }
+    },
   });
 })({
   owl: "http://www.w3.org/2002/07/owl#",
