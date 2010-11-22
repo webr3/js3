@@ -1,0 +1,3 @@
+[submodule "lib/rdfa-api"]
+	path = lib/rdfa-api
+	url = git://github.com/webr3/rdfa-api.git
