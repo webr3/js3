@@ -29,11 +29,11 @@ js3 = (function( curiemap, propertymap ) {
     importArray: function(a) { while( a.length > 0) { this.add(a.pop()) } },
     get: function(index) { return this.graph[index] },
     add: function(triple) {
-      if(!this.index[triple.subject.toNT()]) this.index[triple.subject.toNT()] = {};
-      if(!this.index[triple.subject.toNT()][triple.property.toNT()]) this.index[triple.subject.toNT()][triple.property.toNT()] = [];
-      if(this.index[triple.subject.toNT()][triple.property.toNT()].some(function(o){return o.equals(triple.object)})) return;
+      if(!this.index[triple.subject.value]) this.index[triple.subject.value] = {};
+      if(!this.index[triple.subject.value][triple.property.value]) this.index[triple.subject.value][triple.property.value] = [];
+      if(this.index[triple.subject.value][triple.property.value].some(function(o){return o.equals(triple.object)})) return;
       this.length++;
-      this.index[triple.subject.toNT()][triple.property.toNT()].push(triple.object);
+      this.index[triple.subject.value][triple.property.value].push(triple.object);
       this.graph.push(triple);
     },
     merge: function(s) {
@@ -46,7 +46,7 @@ js3 = (function( curiemap, propertymap ) {
     every: function(filter) { return this.graph.every(filter) },
     some: function(filter) { return this.graph.some(filter) },
     forEach: function(callbck) { this.graph.forEach(callbck) },
-    filter: function(filter) { return new Graph(this.graph.filter(filter)); },
+    filter: function(filter) { return new api.Graph(this.graph.filter(filter)); },
     apply: function(filter) { this.graph = this.graph.filter(filter); this.length = this.graph.length; },
     toArray: function() { return this.graph.slice() }
   };
@@ -177,6 +177,7 @@ js3 = (function( curiemap, propertymap ) {
     resolve: _( function() {
       return curiemap.resolve(this);
     }),
+    value: _( function() { return this; }),
     nodeType: _( function() { 
       if(this.type) return 'TypedLiteral';
       if(this.language || this.indexOf(' ') >= 0 || this.indexOf(':') == -1 ) return 'PlainLiteral';
@@ -226,6 +227,7 @@ js3 = (function( curiemap, propertymap ) {
   });
   Object.defineProperties( Boolean.prototype, {
     type: _( "xsd:boolean".resolve() ),
+    value: _( function() { return this; }),
     nodeType: _( function() { return "TypedLiteral"} ),
     n3: _( function() { return this.valueOf() } ),
     toNT: _( function() { return '"' + this.valueOf() + '"' + "^^<" + this.type + '>' } ),
@@ -233,6 +235,7 @@ js3 = (function( curiemap, propertymap ) {
   });
   Object.defineProperties( Date.prototype, {
     type: _( "xsd:dateTime".resolve() ),
+    value: _( function() { return this; }),
     nodeType: _( function() { return "TypedLiteral"} ),
     n3: _( function() {
       return '"' + this.getUTCFullYear()+'-' + pad(this.getUTCMonth()+1)+'-' + pad(this.getUTCDate())+'T'
@@ -257,6 +260,7 @@ js3 = (function( curiemap, propertymap ) {
         if(DOUBLE.test(n)) return 'xsd:double'.resolve();
       }
     },
+    value: _( function() { return this; }),
     nodeType: _( function() { return "TypedLiteral" } ),
     n3: _( function() {
       if(this == Number.POSITIVE_INFINITY) return '"INF"^^<' + 'xsd:double'.resolve() + '>';
