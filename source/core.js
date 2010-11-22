@@ -12,7 +12,7 @@
     return p;
   };
   // N-Triples encoder
-  function encodeString(s) {
+  js3.encodeString = encodeString = function(s) {
     var out = "";
     var skip = false;
     var _g1 = 0, _g = s.length;
