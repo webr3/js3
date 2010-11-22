@@ -333,8 +333,6 @@ js3 = (function(curiemap, propertymap) {
     equals: _(function(other) {
       if( this.nodeType() != other.nodeType() ) return false;
       switch(this.nodeType()) {
-        case "IRI": case "BlankNode":
-          return this == other;
         case "PlainLiteral":
           if((this.language && !other.language) || (!this.language && other.language)) return false;
           if(this.language && other.language) return this.language == other.language && this == other;
@@ -342,7 +340,7 @@ js3 = (function(curiemap, propertymap) {
         case "TypedLiteral":
           return this.type.equals(other.type) && this == other;
       }
-      return this.n3() == other.n3()
+      return this.toNT() == other.toNT()
     }),
     ref: _( function(id) {
       Object.defineProperties(this, {
@@ -415,7 +413,7 @@ js3 = (function(curiemap, propertymap) {
     resolve: _( function() {
       return curiemap.resolve(this);
     }),
-    value: _( function() { return this; }),
+    value: { configurable : false, enumerable: false, get: function() { return this.nodeType() == 'IRI' ? this.resolve() : this; } },
     nodeType: _( function() { 
       if(this.type) return 'TypedLiteral';
       if(this.language || this.indexOf(' ') >= 0 || this.indexOf(':') == -1 ) return 'PlainLiteral';
@@ -461,11 +459,17 @@ js3 = (function(curiemap, propertymap) {
         outs.push(i.n3(a))
       });
       return this.list ? "( " + outs.join(" ") + " )" : outs.join(", ");
+    }),
+    remove: _(function(obj) {
+      var idx = this.indexOf(obj);
+      if(idx == -1) { return false }
+      this.splice(idx, 1);
+      return true
     })
   });
   Object.defineProperties( Boolean.prototype, {
     type: _( "xsd:boolean".resolve() ),
-    value: _( function() { return this; }),
+    value: { configurable : false, enumerable: false, get: function() { return this; } },
     nodeType: _( function() { return "TypedLiteral"} ),
     n3: _( function() { return this.valueOf() } ),
     toNT: _( function() { return '"' + this.valueOf() + '"' + "^^<" + this.type + '>' } ),
@@ -473,7 +477,7 @@ js3 = (function(curiemap, propertymap) {
   });
   Object.defineProperties( Date.prototype, {
     type: _( "xsd:dateTime".resolve() ),
-    value: _( function() { return this; }),
+    value: { configurable : false, enumerable: false, get: function() { return this; } },
     nodeType: _( function() { return "TypedLiteral"} ),
     n3: _( function() {
       return '"' + this.getUTCFullYear()+'-' + pad(this.getUTCMonth()+1)+'-' + pad(this.getUTCDate())+'T'
@@ -498,7 +502,7 @@ js3 = (function(curiemap, propertymap) {
         if(DOUBLE.test(n)) return 'xsd:double'.resolve();
       }
     },
-    value: _( function() { return this; }),
+    value: { configurable : false, enumerable: false, get: function() { return this; } },
     nodeType: _( function() { return "TypedLiteral" } ),
     n3: _( function() {
       if(this == Number.POSITIVE_INFINITY) return '"INF"^^<' + 'xsd:double'.resolve() + '>';

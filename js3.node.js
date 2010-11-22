@@ -333,8 +333,6 @@ js3 = (function(curiemap, propertymap) {
     equals: _(function(other) {
       if( this.nodeType() != other.nodeType() ) return false;
       switch(this.nodeType()) {
-        case "IRI": case "BlankNode":
-          return this == other;
         case "PlainLiteral":
           if((this.language && !other.language) || (!this.language && other.language)) return false;
           if(this.language && other.language) return this.language == other.language && this == other;
@@ -342,7 +340,7 @@ js3 = (function(curiemap, propertymap) {
         case "TypedLiteral":
           return this.type.equals(other.type) && this == other;
       }
-      return this.n3() == other.n3()
+      return this.toNT() == other.toNT()
     }),
     ref: _( function(id) {
       Object.defineProperties(this, {
@@ -415,7 +413,7 @@ js3 = (function(curiemap, propertymap) {
     resolve: _( function() {
       return curiemap.resolve(this);
     }),
-    value: _( function() { return this; }),
+    value: { configurable : false, enumerable: false, get: function() { return this.nodeType() == 'IRI' ? this.resolve() : this; } },
     nodeType: _( function() { 
       if(this.type) return 'TypedLiteral';
       if(this.language || this.indexOf(' ') >= 0 || this.indexOf(':') == -1 ) return 'PlainLiteral';
@@ -461,11 +459,17 @@ js3 = (function(curiemap, propertymap) {
         outs.push(i.n3(a))
       });
       return this.list ? "( " + outs.join(" ") + " )" : outs.join(", ");
+    }),
+    remove: _(function(obj) {
+      var idx = this.indexOf(obj);
+      if(idx == -1) { return false }
+      this.splice(idx, 1);
+      return true
     })
   });
   Object.defineProperties( Boolean.prototype, {
     type: _( "xsd:boolean".resolve() ),
-    value: _( function() { return this; }),
+    value: { configurable : false, enumerable: false, get: function() { return this; } },
     nodeType: _( function() { return "TypedLiteral"} ),
     n3: _( function() { return this.valueOf() } ),
     toNT: _( function() { return '"' + this.valueOf() + '"' + "^^<" + this.type + '>' } ),
@@ -473,7 +477,7 @@ js3 = (function(curiemap, propertymap) {
   });
   Object.defineProperties( Date.prototype, {
     type: _( "xsd:dateTime".resolve() ),
-    value: _( function() { return this; }),
+    value: { configurable : false, enumerable: false, get: function() { return this; } },
     nodeType: _( function() { return "TypedLiteral"} ),
     n3: _( function() {
       return '"' + this.getUTCFullYear()+'-' + pad(this.getUTCMonth()+1)+'-' + pad(this.getUTCDate())+'T'
@@ -498,7 +502,7 @@ js3 = (function(curiemap, propertymap) {
         if(DOUBLE.test(n)) return 'xsd:double'.resolve();
       }
     },
-    value: _( function() { return this; }),
+    value: { configurable : false, enumerable: false, get: function() { return this; } },
     nodeType: _( function() { return "TypedLiteral" } ),
     n3: _( function() {
       if(this == Number.POSITIVE_INFINITY) return '"INF"^^<' + 'xsd:double'.resolve() + '>';
@@ -570,7 +574,7 @@ rdfapi = (function(api) {
   api.IRI.SCHEME_MATCH = new RegExp("^[a-z0-9-.+]+:", "i");
   api.IRI.prototype = {
     nodeType: function() { return "IRI" },
-    toNT: function() { return"<" + this.encodeString(this.value) + ">" },
+    toNT: function() { return this.value.toNT() },
     defrag: function() {
       var i = this.value.indexOf("#");
       return (i < 0) ? this : new api.IRI(this.value.slice(0, i))
@@ -779,6 +783,11 @@ rdfapi = (function(api) {
     },
     createTriple: function(s, p, o) { return new api.RDFTriple(s, p, o) },
     createGraph: function(a) { return new api.Graph(a) },
+    getMapping: function() {
+      var m = new api.Hash;
+      m.h = api.curiemap;
+      return m;
+    },
     setMapping: function(prefix, iri) {
       if(prefix.slice(-1) == ":") { prefix = prefix.slice(0, -1) }
       api.curiemap[prefix] = iri;
@@ -829,6 +838,15 @@ rdfapi = (function(api) {
       this.registerTypeConversion("xsd:dateTime", dateConverter)
     }
   };
+  /**
+   * Data implements DocumentData
+   */
+  api.Data = function() { this.graph = new api.Graph; this.context = new api.Context };
+  api.Data.prototype = {
+    context: null, graph: null,
+    createContext: function() { return new api.Context }
+  };
+  api.data = new api.Data;
   return api;
 })( js3 );
 /**
@@ -1597,7 +1615,7 @@ rdfapi = (function(api) {
       var _ = this;
       var properties = po.keys();
       properties.sort();
-      if(properties.contains("a")) {
+      if(properties.indexOf("a") >= 0) {
         properties.remove("a");
         properties.unshift("a")
       }
@@ -1637,7 +1655,7 @@ rdfapi = (function(api) {
       this.index.keys().forEach(function(subject, $is, $as) {
         var single = "";
         if(subject.charAt(0) == "_") {
-          if(!_.nonAnonBNodes.exists(subject) && !_.skipSubjects.contains(subject)) {
+          if(!_.nonAnonBNodes.exists(subject) && _.skipSubjects.indexOf(subject) == -1) {
             if(_.lists.exists(subject)) {
               single = _.renderList(subject, 2) + " " + _.propertyObjectChain(_.index.get(subject))
             } else {
@@ -1651,7 +1669,7 @@ rdfapi = (function(api) {
       });
       if(this.usedPrefixes.length > 0) {
         var invertedMap = new api.Hash;
-        this.prefixMap.keys().forEach(function(k, i, h) { if(_.usedPrefixes.contains(k)) { invertedMap.set(_.prefixMap.get(k), k) } });
+        this.prefixMap.keys().forEach(function(k, i, h) { if(_.usedPrefixes.indexOf(k)>= 0) { invertedMap.set(_.prefixMap.get(k), k) } });
         var prefixes = invertedMap.keys();
         prefixes.sort();
         prefixes.reverse();
@@ -1684,12 +1702,13 @@ rdfapi = (function(api) {
       if(property && n.equals(api.serializers.Turtle.RDF_TYPE)) { return "a" }
       if(n.equals(api.serializers.Turtle.RDF_NIL)) { return "()" }
       var _g = 0, _g1 = this.prefixMap.keys();
+      console.log(n + ' ' + n.value);
       while(_g < _g1.length) {
         var i = _g1[_g];
         ++_g;
-        if(n.toString().startsWith(i)) {
-          if(!this.usedPrefixes.contains(i)) { this.usedPrefixes.push(i) }
-          return n.toString().replace(i, this.prefixMap.get(i))
+        if(i == n.value.substring(0, i.length)) {
+          if(this.usedPrefixes.indexOf(i) == -1) { this.usedPrefixes.push(i) }
+          return n.value.replace(i, this.prefixMap.get(i))
         }
       }
       return n.toNT()

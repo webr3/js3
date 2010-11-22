@@ -38,7 +38,7 @@ rdfapi = (function(api) {
   api.IRI.SCHEME_MATCH = new RegExp("^[a-z0-9-.+]+:", "i");
   api.IRI.prototype = {
     nodeType: function() { return "IRI" },
-    toNT: function() { return"<" + this.encodeString(this.value) + ">" },
+    toNT: function() { return this.value.toNT() },
     defrag: function() {
       var i = this.value.indexOf("#");
       return (i < 0) ? this : new api.IRI(this.value.slice(0, i))
@@ -247,6 +247,11 @@ rdfapi = (function(api) {
     },
     createTriple: function(s, p, o) { return new api.RDFTriple(s, p, o) },
     createGraph: function(a) { return new api.Graph(a) },
+    getMapping: function() {
+      var m = new api.Hash;
+      m.h = api.curiemap;
+      return m;
+    },
     setMapping: function(prefix, iri) {
       if(prefix.slice(-1) == ":") { prefix = prefix.slice(0, -1) }
       api.curiemap[prefix] = iri;
@@ -297,5 +302,14 @@ rdfapi = (function(api) {
       this.registerTypeConversion("xsd:dateTime", dateConverter)
     }
   };
+  /**
+   * Data implements DocumentData
+   */
+  api.Data = function() { this.graph = new api.Graph; this.context = new api.Context };
+  api.Data.prototype = {
+    context: null, graph: null,
+    createContext: function() { return new api.Context }
+  };
+  api.data = new api.Data;
   return api;
 })( js3 );
