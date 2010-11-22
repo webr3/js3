@@ -231,9 +231,54 @@ var propertymap = (function(map) {
         'location','originalOrganization','changedBy','resultedFrom','resultingOrganization'],
 });
 /**
+ * Core API implementing RDFa API interfaces
+ */
+js3 = (function(curiemap, propertymap) {
+  api = { curiemap: curiemap, propertymap: propertymap };
+  api.RDFTriple = function(s, p, o) { this.subject = s; this.property = p; this.object = o; };
+  api.RDFTriple.prototype = {
+    object: null, property: null, subject: null,
+    toString: function() { return this.subject.toNT() + " " + this.property.toNT() + " " + this.object.toNT() + " ." },
+    equals: function(t) { return this.subject.equals(t.subject) && this.property.equals(t.property) && this.object.equals(t.object) }
+  };
+  api.Graph = function(a) {
+    this.length = 0;
+    this.graph = [];
+    this.index = {};
+    if(Array.isArray(a)) this.importArray(a);
+  };
+  api.Graph.prototype = {
+    length: null, graph: null,
+    importArray: function(a) { while( a.length > 0) { this.add(a.pop()) } },
+    get: function(index) { return this.graph[index] },
+    add: function(triple) {
+      if(!this.index[triple.subject.value]) this.index[triple.subject.value] = {};
+      if(!this.index[triple.subject.value][triple.property.value]) this.index[triple.subject.value][triple.property.value] = [];
+      if(this.index[triple.subject.value][triple.property.value].some(function(o){return o.equals(triple.object)})) return;
+      this.length++;
+      this.index[triple.subject.value][triple.property.value].push(triple.object);
+      this.graph.push(triple);
+    },
+    merge: function(s) {
+      var _g1 = 0, _g = s.length;
+      while(_g1 < _g) {
+        var i = _g1++;
+        this.add(s.get(i))
+      }
+    },
+    every: function(filter) { return this.graph.every(filter) },
+    some: function(filter) { return this.graph.some(filter) },
+    forEach: function(callbck) { this.graph.forEach(callbck) },
+    filter: function(filter) { return new js3.Graph(this.graph.filter(filter)); },
+    apply: function(filter) { this.graph = this.graph.filter(filter); this.length = this.graph.length; },
+    toArray: function() { return this.graph.slice() }
+  };
+  return api;
+})(curiemap, propertymap);
+/**
  * JS3 Core
  */
-js3 = (function( curiemap, propertymap, api ) {
+(function( js3 ) {
   var bn = 0;
   function _(v) { return { writable: false, configurable : false, enumerable: false, value: v }}
   function pad(n){ return n<10 ? '0'+n : n }
@@ -243,48 +288,6 @@ js3 = (function( curiemap, propertymap, api ) {
     if(p.indexOf(':') == -1) p = propertymap.resolve(p,l);
     return p;
   };
-  if(!api) {
-    api = {};
-    // Temporary import of RDFa API RDFTriple and Graph for graphification. 
-    api.RDFTriple = function(s, p, o) { this.subject = s; this.property = p; this.object = o; };
-    api.RDFTriple.prototype = {
-      object: null, property: null, subject: null,
-      toString: function() { return this.subject.toNT() + " " + this.property.toNT() + " " + this.object.toNT() + " ." },
-      equals: function(t) { return this.subject.equals(t.subject) && this.property.equals(t.property) && this.object.equals(t.object) }
-    };
-    api.Graph = function(a) {
-      this.length = 0;
-      this.graph = [];
-      this.index = {};
-      if(Array.isArray(a)) this.importArray(a);
-    };
-    api.Graph.prototype = {
-      length: null, graph: null,
-      importArray: function(a) { while( a.length > 0) { this.add(a.pop()) } },
-      get: function(index) { return this.graph[index] },
-      add: function(triple) {
-        if(!this.index[triple.subject.value]) this.index[triple.subject.value] = {};
-        if(!this.index[triple.subject.value][triple.property.value]) this.index[triple.subject.value][triple.property.value] = [];
-        if(this.index[triple.subject.value][triple.property.value].some(function(o){return o.equals(triple.object)})) return;
-        this.length++;
-        this.index[triple.subject.value][triple.property.value].push(triple.object);
-        this.graph.push(triple);
-      },
-      merge: function(s) {
-        var _g1 = 0, _g = s.length;
-        while(_g1 < _g) {
-          var i = _g1++;
-          this.add(s.get(i))
-        }
-      },
-      every: function(filter) { return this.graph.every(filter) },
-      some: function(filter) { return this.graph.some(filter) },
-      forEach: function(callbck) { this.graph.forEach(callbck) },
-      filter: function(filter) { return new api.Graph(this.graph.filter(filter)); },
-      apply: function(filter) { this.graph = this.graph.filter(filter); this.length = this.graph.length; },
-      toArray: function() { return this.graph.slice() }
-    };
-  }
   // N-Triples encoder
   function encodeString(s) {
     var out = "";
@@ -359,28 +362,28 @@ js3 = (function( curiemap, propertymap, api ) {
           return this.graphify(a).toArray().join("\n");
         }),
         graphify: _( function(a) {
-          var graph = new api.Graph, o = this, map = o.aliasmap || a;
+          var graph = new js3.Graph, o = this, map = o.aliasmap || a;
           function graphify(s1,p1,o1) {
             if(typeof o1 == 'function') return;
             if(!o1.nodeType && !o1.id) o1.ref();
             if(o1.id) {
-              graph.add( new api.RDFTriple(s1, prop(p1,map), o1.id ) );
+              graph.add( new js3.RDFTriple(s1, prop(p1,map), o1.id ) );
               graph.merge( o1.graphify() );
             } else if(!Array.isArray(o1)) {
-              graph.add( new api.RDFTriple(s1, prop(p1,map), o1 ) );
+              graph.add( new js3.RDFTriple(s1, prop(p1,map), o1 ) );
             } else if(Array.isArray(o1)) {
               if(!o1.list) {
                 o1.forEach( function(i) { graphify(s1,p1,i) });
               } else {
                 if(o1.length == 0) {
-                  graph.add( new api.RDFTriple(s1, prop(p1,map), "rdf:nil".resolve() ) );
+                  graph.add( new js3.RDFTriple(s1, prop(p1,map), "rdf:nil".resolve() ) );
                 } else {
                   var b = {}.ref();
-                  graph.add( new api.RDFTriple(s1, prop(p1,map), b.id ) );
+                  graph.add( new js3.RDFTriple(s1, prop(p1,map), b.id ) );
                   o1.forEach( function(i,x) {
                     graphify(b.id, 'rdf:first'.resolve(), i );
                     var n = {}.ref();
-                    graph.add( new api.RDFTriple(b.id, 'rdf:rest'.resolve(), (x == o1.length-1) ? 'rdf:nil'.resolve() : n.id ) );
+                    graph.add( new js3.RDFTriple(b.id, 'rdf:rest'.resolve(), (x == o1.length-1) ? 'rdf:nil'.resolve() : n.id ) );
                     b = n;
                   });
                 }
@@ -511,21 +514,19 @@ js3 = (function( curiemap, propertymap, api ) {
     }),
     toCanonical: _( function() { return this.nt() } )
   });
-  return {
-    curiemap: curiemap, propertymap: propertymap,
-    graphify: function() {
-      var a = Array.prototype.slice.call(arguments), gout = new api.Graph;
-      function graphify(o) {
-        if(typeof o == 'object' && !o.nodeType) {
-          if(!o.id) o.ref();
-          gout.merge( o.graphify() );
-        }
-      };
-      a.forEach( function(o) {
-        if(Array.isArray(o)) o.forEach(function(x){graphify(x)});
-        else graphify(o);
-      });
-      return gout;
-    }
+  js3.graphify = function() {
+    var a = Array.prototype.slice.call(arguments), gout = new js3.Graph;
+    function graphify(o) {
+      if(typeof o == 'object' && !o.nodeType) {
+        if(!o.id) o.ref();
+        gout.merge( o.graphify() );
+      }
+    };
+    a.forEach( function(o) {
+      if(Array.isArray(o)) o.forEach(function(x){graphify(x)});
+      else graphify(o);
+    });
+    return gout;
   };
-})( curiemap, propertymap );module.exports = js3;
+  return js3;
+})( js3 );module.exports = js3;
