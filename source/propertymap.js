@@ -7,7 +7,7 @@ var propertymap = (function(map) {
       writable: false, configurable : false, enumerable: false,
       value: function(t,l) {
         t = t.toString();
-        l = Array.isArray(l) && l.length > 0 ? l : Object.keys(this);
+        l = Array.isArray(l) && l.length > 0 ? l.concat(Object.keys(this)) : Object.keys(this);
         for(i in l) if(this[l[i]].indexOf(t) >= 0) return l[i] + ':' + t;
         return t;
       }
