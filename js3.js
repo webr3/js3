@@ -1539,6 +1539,24 @@ rdfapi = (function(api) {
       return this.context.createIRI(e.namespaceURI + e.localName)
     }
   };
+  api.parseNT = function(doc, cb, filter, graph) {
+    return new api.parsers.NTriples(api.data.context).parse(doc, cb, filter, graph);
+  };
+  api.processNT = function(doc, cb, filter) {
+    return new api.parsers.NTriples(api.data.context).process(doc, cb, filter);
+  };
+  api.parseTurtle = function(doc, cb, filter, graph) {
+    return new api.parsers.Turtle(api.data.context).parse(doc, cb, filter, graph);
+  };
+  api.processTurtle = function(doc, cb, filter) {
+    return new api.parsers.Turtle(api.data.context).process(doc, cb, filter);
+  };
+  api.parseRDFXML = function(doc, cb, filter, graph) {
+    return new api.parsers.RDFXML(api.data.context).parse(doc, cb, filter, graph);
+  };
+  api.processRDFXML = function(doc, cb, filter) {
+    return new api.parsers.RDFXML(api.data.context).process(doc, cb, filter);
+  };
 })(rdfapi);
 /**
  * Serializers (NTriples, Turtle)
