@@ -174,6 +174,17 @@ var propertymap = (function(map) {
         });
         return out;
       }
+    },
+    shrink: {
+      writable: false, configurable : false, enumerable: false,
+      value: function(curie) {
+        var p = curie.indexOf(':');
+        var prefix = curie.substring(0,p);
+        var suffix = curie.substring(++p);
+        if(!this[prefix]) this[prefix] = [];
+        if(this[prefix].indexOf(suffix) == -1) this[prefix].push(suffix);
+        return suffix;
+      }
     }
   });
 })({
@@ -270,7 +281,12 @@ js3 = (function(curiemap, propertymap) {
     some: function(filter) { return this.graph.some(filter) },
     forEach: function(callbck) { this.graph.forEach(callbck) },
     filter: function(filter) { return new js3.Graph(this.graph.filter(filter)); },
-    apply: function(filter) { this.graph = this.graph.filter(filter); this.length = this.graph.length; },
+    apply: function(filter) {
+      var g = new api.Graph(this.graph.filter(filter));
+      this.graph = g.graph;
+      this.index = g.index;
+      this.length = g.length;
+    },
     toArray: function() { return this.graph.slice() }
   };
   return api;
@@ -354,7 +370,7 @@ js3 = (function(curiemap, propertymap) {
             outs.push( prop(p, map) + ' ' + o[p].n3(map) );
           });
           outs = outs.join(";\n  ");
-          return id ? this.id.n3() + ' ' + outs + ' .' : '[ ' + outs + ' ]';
+          return id.nodeType() == 'IRI' ? this.id.n3() + ' ' + outs + ' .' : '[ ' + outs + ' ]';
         }),
         toNT: _( function(a) {
           return this.graphify(a).toArray().join("\n");
@@ -393,6 +409,14 @@ js3 = (function(curiemap, propertymap) {
         }),
         using: _( function() {
           Object.defineProperty(this,'aliasmap',_(Array.prototype.slice.call(arguments)));
+          return this;
+        }),
+        alsoUsing: _( function() {
+          if(!this.aliasmap) {
+            Object.defineProperty(this,'aliasmap',_(Array.prototype.slice.call(arguments)));
+          }
+          var _$ = this;
+          Array.prototype.slice.call(arguments).forEach(function(a) { _$.aliasmap.push(a) });
           return this;
         })
       });
@@ -455,7 +479,7 @@ js3 = (function(curiemap, propertymap) {
       this.forEach( function(i) {
         if(typeof i == 'function') return;
         if(i.id && i.id.nodeType() == 'IRI') return outs.push( i.id.n3() );
-        if(!i.nodeType) i.ref();
+        if(!i.nodeType && !i.id) i.ref();
         outs.push(i.n3(a))
       });
       return this.list ? "( " + outs.join(" ") + " )" : outs.join(", ");
@@ -531,6 +555,50 @@ js3 = (function(curiemap, propertymap) {
       else graphify(o);
     });
     return gout;
+  };
+  js3.Graph.prototype.objectify = function() {
+    var os = {}, _$ = this;
+    var lists = {};
+    function addRef(ref) {
+      if(!os[ref.value]) os[ref.value] = {}.ref(ref.value);
+      return os[ref.value];
+    };
+    function juggle(node) {
+      switch( node.nodeType() ) {
+        case 'BlankNode':
+          return lists[node] ? lists[node].toList() : addRef(node);
+      }
+      if(node.equals('rdf:nil')) return [].toList();
+      return node.value;
+    }
+    var remove = [];
+    this.filter(js3.filters.o('rdf:nil')).forEach(function(t) {
+      if(!t.property.equals('rdf:rest')) return;
+      var l = [];
+      while(true) {
+        remove.push(t.subject);
+        l.unshift( _$.filter(js3.filters.sp(t.subject,'rdf:first')).toArray().shift().object );
+        var previous = _$.filter( js3.filters.po('rdf:rest',t.subject) );
+        if(previous.length == 0) {
+          lists[t.subject] = l.slice();
+          return;
+        }
+        t = previous.toArray().shift();
+      }
+    });
+    this.apply( function(t) { return remove.indexOf(t.subject) == -1; });
+    this.forEach( function(t) {
+      var s = addRef(t.subject.value), cp, p;
+      p = js3.propertymap.shrink( cp = js3.curiemap.shrink(t.property.value) );
+      s.alsoUsing(cp.substring(0,cp.indexOf(':')));
+      if(!s[p]) {
+        s[p] = juggle(t.object);
+        return;
+      }
+      if(!Array.isArray(s[p])) s[p] = [s[p]]; 
+      s[p].push( juggle(t.object) );
+    });
+    return os;
   };
   return js3;
 })( js3 );

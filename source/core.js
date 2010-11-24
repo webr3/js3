@@ -77,7 +77,7 @@
             outs.push( prop(p, map) + ' ' + o[p].n3(map) );
           });
           outs = outs.join(";\n  ");
-          return id ? this.id.n3() + ' ' + outs + ' .' : '[ ' + outs + ' ]';
+          return id.nodeType() == 'IRI' ? this.id.n3() + ' ' + outs + ' .' : '[ ' + outs + ' ]';
         }),
         toNT: _( function(a) {
           return this.graphify(a).toArray().join("\n");
@@ -116,6 +116,14 @@
         }),
         using: _( function() {
           Object.defineProperty(this,'aliasmap',_(Array.prototype.slice.call(arguments)));
+          return this;
+        }),
+        alsoUsing: _( function() {
+          if(!this.aliasmap) {
+            Object.defineProperty(this,'aliasmap',_(Array.prototype.slice.call(arguments)));
+          }
+          var _$ = this;
+          Array.prototype.slice.call(arguments).forEach(function(a) { _$.aliasmap.push(a) });
           return this;
         })
       });
@@ -178,7 +186,7 @@
       this.forEach( function(i) {
         if(typeof i == 'function') return;
         if(i.id && i.id.nodeType() == 'IRI') return outs.push( i.id.n3() );
-        if(!i.nodeType) i.ref();
+        if(!i.nodeType && !i.id) i.ref();
         outs.push(i.n3(a))
       });
       return this.list ? "( " + outs.join(" ") + " )" : outs.join(", ");
@@ -254,6 +262,50 @@
       else graphify(o);
     });
     return gout;
+  };
+  js3.Graph.prototype.objectify = function() {
+    var os = {}, _$ = this;
+    var lists = {};
+    function addRef(ref) {
+      if(!os[ref.value]) os[ref.value] = {}.ref(ref.value);
+      return os[ref.value];
+    };
+    function juggle(node) {
+      switch( node.nodeType() ) {
+        case 'BlankNode':
+          return lists[node] ? lists[node].toList() : addRef(node);
+      }
+      if(node.equals('rdf:nil')) return [].toList();
+      return node.value;
+    }
+    var remove = [];
+    this.filter(js3.filters.o('rdf:nil')).forEach(function(t) {
+      if(!t.property.equals('rdf:rest')) return;
+      var l = [];
+      while(true) {
+        remove.push(t.subject);
+        l.unshift( _$.filter(js3.filters.sp(t.subject,'rdf:first')).toArray().shift().object );
+        var previous = _$.filter( js3.filters.po('rdf:rest',t.subject) );
+        if(previous.length == 0) {
+          lists[t.subject] = l.slice();
+          return;
+        }
+        t = previous.toArray().shift();
+      }
+    });
+    this.apply( function(t) { return remove.indexOf(t.subject) == -1; });
+    this.forEach( function(t) {
+      var s = addRef(t.subject.value), cp, p;
+      p = js3.propertymap.shrink( cp = js3.curiemap.shrink(t.property.value) );
+      s.alsoUsing(cp.substring(0,cp.indexOf(':')));
+      if(!s[p]) {
+        s[p] = juggle(t.object);
+        return;
+      }
+      if(!Array.isArray(s[p])) s[p] = [s[p]]; 
+      s[p].push( juggle(t.object) );
+    });
+    return os;
   };
   return js3;
 })( js3 );

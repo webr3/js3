@@ -24,6 +24,17 @@ var propertymap = (function(map) {
         });
         return out;
       }
+    },
+    shrink: {
+      writable: false, configurable : false, enumerable: false,
+      value: function(curie) {
+        var p = curie.indexOf(':');
+        var prefix = curie.substring(0,p);
+        var suffix = curie.substring(++p);
+        if(!this[prefix]) this[prefix] = [];
+        if(this[prefix].indexOf(suffix) == -1) this[prefix].push(suffix);
+        return suffix;
+      }
     }
   });
 })({

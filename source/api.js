@@ -38,7 +38,12 @@ js3 = (function(curiemap, propertymap) {
     some: function(filter) { return this.graph.some(filter) },
     forEach: function(callbck) { this.graph.forEach(callbck) },
     filter: function(filter) { return new js3.Graph(this.graph.filter(filter)); },
-    apply: function(filter) { this.graph = this.graph.filter(filter); this.length = this.graph.length; },
+    apply: function(filter) {
+      var g = new api.Graph(this.graph.filter(filter));
+      this.graph = g.graph;
+      this.index = g.index;
+      this.length = g.length;
+    },
     toArray: function() { return this.graph.slice() }
   };
   return api;
