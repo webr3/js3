@@ -28,6 +28,7 @@ var propertymap = (function(map) {
     shrink: {
       writable: false, configurable : false, enumerable: false,
       value: function(curie) {
+        if(curie == 'rdf:type') return 'a';
         var p = curie.indexOf(':');
         var prefix = curie.substring(0,p);
         var suffix = curie.substring(++p);

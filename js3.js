@@ -178,6 +178,7 @@ var propertymap = (function(map) {
     shrink: {
       writable: false, configurable : false, enumerable: false,
       value: function(curie) {
+        if(curie == 'rdf:type') return 'a';
         var p = curie.indexOf(':');
         var prefix = curie.substring(0,p);
         var suffix = curie.substring(++p);
@@ -360,28 +361,28 @@ js3 = (function(curiemap, propertymap) {
     }),
     ref: _( function(id) {
       Object.defineProperties(this, {
-        id: _( id ? id.resolve() : '_:b' +(++bn) ),
+        '@': _( id ? id.resolve() : '_:b' +(++bn) ),
         n3: _( function(a) {
-          var outs = [], o = this, map = o.aliasmap || a;
+          var outs = [], o = this, map = o['#'] || a;
           Object.keys(this).forEach(function(p) {
             if(typeof o[p] == 'function') return;
-            if(o[p].id && o[p].id.nodeType() == 'IRI') return outs.push( prop(p,map) + ' ' + o[p].id.n3() );
-            if(!o[p].nodeType && !o[p].id) o[p].ref();
+            if(o[p]['@'] && o[p]['@'].nodeType() == 'IRI') return outs.push( prop(p,map) + ' ' + o[p]['@'].n3() );
+            if(!o[p].nodeType && !o[p]['@']) o[p].ref();
             outs.push( prop(p, map) + ' ' + o[p].n3(map) );
           });
           outs = outs.join(";\n  ");
-          return id.nodeType() == 'IRI' ? this.id.n3() + ' ' + outs + ' .' : '[ ' + outs + ' ]';
+          return id.nodeType() == 'IRI' ? this['@'].n3() + ' ' + outs + ' .' : '[ ' + outs + ' ]';
         }),
         toNT: _( function(a) {
           return this.graphify(a).toArray().join("\n");
         }),
         graphify: _( function(a) {
-          var graph = new js3.Graph, o = this, map = o.aliasmap || a;
+          var graph = new js3.Graph, o = this, map = o['#'] || a;
           function graphify(s1,p1,o1) {
             if(typeof o1 == 'function') return;
-            if(!o1.nodeType && !o1.id) o1.ref();
-            if(o1.id) {
-              graph.add( new js3.RDFTriple(s1, prop(p1,map), o1.id ) );
+            if(!o1.nodeType && !o1['@']) o1.ref();
+            if(o1['@']) {
+              graph.add( new js3.RDFTriple(s1, prop(p1,map), o1['@'] ) );
               graph.merge( o1.graphify() );
             } else if(!Array.isArray(o1)) {
               graph.add( new js3.RDFTriple(s1, prop(p1,map), o1 ) );
@@ -393,30 +394,37 @@ js3 = (function(curiemap, propertymap) {
                   graph.add( new js3.RDFTriple(s1, prop(p1,map), "rdf:nil".resolve() ) );
                 } else {
                   var b = {}.ref();
-                  graph.add( new js3.RDFTriple(s1, prop(p1,map), b.id ) );
+                  graph.add( new js3.RDFTriple(s1, prop(p1,map), b['@'] ) );
                   o1.forEach( function(i,x) {
-                    graphify(b.id, 'rdf:first'.resolve(), i );
+                    graphify(b['@'], 'rdf:first'.resolve(), i );
                     var n = {}.ref();
-                    graph.add( new js3.RDFTriple(b.id, 'rdf:rest'.resolve(), (x == o1.length-1) ? 'rdf:nil'.resolve() : n.id ) );
+                    graph.add( new js3.RDFTriple(b['@'], 'rdf:rest'.resolve(), (x == o1.length-1) ? 'rdf:nil'.resolve() : n['@'] ) );
                     b = n;
                   });
                 }
               }
             }
           }
-          Object.keys(this).forEach(function(p) { graphify(o.id, p, o[p]) });
+          Object.keys(this).forEach(function(p) { graphify(o['@'], p, o[p]) });
           return graph;
         }),
+        '_#': _([]), '#':{configurable : false, enumerable: true,
+          get: function() { return this['_#']; },
+          set: function(v) {
+            if(Array.isArray(v)) {
+              for(i in v) if(this['_#'].indexOf(i[v]) == -1) this['_#'].push(i[v])
+              return;
+            }
+            if(this['_#'].indexOf(v) == -1) this['_#'].push(v);
+          }
+        },
         using: _( function() {
-          Object.defineProperty(this,'aliasmap',_(Array.prototype.slice.call(arguments)));
+          this['#'] = Array.prototype.slice.call(arguments);
           return this;
         }),
         alsoUsing: _( function() {
-          if(!this.aliasmap) {
-            Object.defineProperty(this,'aliasmap',_(Array.prototype.slice.call(arguments)));
-          }
           var _$ = this;
-          Array.prototype.slice.call(arguments).forEach(function(a) { _$.aliasmap.push(a) });
+          Array.prototype.slice.call(arguments).forEach(function(a) { _$['#'] = a });
           return this;
         })
       });
@@ -478,8 +486,8 @@ js3 = (function(curiemap, propertymap) {
       var outs = [];
       this.forEach( function(i) {
         if(typeof i == 'function') return;
-        if(i.id && i.id.nodeType() == 'IRI') return outs.push( i.id.n3() );
-        if(!i.nodeType && !i.id) i.ref();
+        if(i['@'] && i['@'].nodeType() == 'IRI') return outs.push( i['@'].n3() );
+        if(!i.nodeType && !i['@']) i.ref();
         outs.push(i.n3(a))
       });
       return this.list ? "( " + outs.join(" ") + " )" : outs.join(", ");
@@ -546,7 +554,7 @@ js3 = (function(curiemap, propertymap) {
     var a = Array.prototype.slice.call(arguments), gout = new js3.Graph;
     function graphify(o) {
       if(typeof o == 'object' && !o.nodeType) {
-        if(!o.id) o.ref();
+        if(!o['@']) o.ref();
         gout.merge( o.graphify() );
       }
     };
@@ -595,7 +603,7 @@ js3 = (function(curiemap, propertymap) {
         s[p] = juggle(t.object);
         return;
       }
-      if(!Array.isArray(s[p])) s[p] = [s[p]]; 
+      if(!Array.isArray(s[p])) s[p] = [s[p]];
       s[p].push( juggle(t.object) );
     });
     return os;
@@ -839,7 +847,7 @@ rdfapi = (function(api) {
   };
   api.Context.prototype = {
     base: null, converterMap: null,
-    createBlankNode: function() { return {}.ref().id; },
+    createBlankNode: function() { return {}.ref()['@']; },
     createIRI: function(iri) {
       var resolved = new api.IRI(iri);
       if(resolved.scheme() == null && this.base != null) { resolved = this.base.resolveReference(resolved) }

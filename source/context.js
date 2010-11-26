@@ -235,7 +235,7 @@ rdfapi = (function(api) {
   };
   api.Context.prototype = {
     base: null, converterMap: null,
-    createBlankNode: function() { return {}.ref().id; },
+    createBlankNode: function() { return {}.ref()['@']; },
     createIRI: function(iri) {
       var resolved = new api.IRI(iri);
       if(resolved.scheme() == null && this.base != null) { resolved = this.base.resolveReference(resolved) }
