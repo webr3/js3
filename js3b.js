@@ -408,7 +408,7 @@ js3 = (function(curiemap, propertymap) {
           Object.keys(this).forEach(function(p) { graphify(o['@'], p, o[p]) });
           return graph;
         }),
-        '_#': _([]), '#':{configurable : false, enumerable: true,
+        '_#': _([]), '#':{configurable : false, enumerable: false,
           get: function() { return this['_#']; },
           set: function(v) {
             if(Array.isArray(v)) {
